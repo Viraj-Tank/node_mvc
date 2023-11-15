@@ -1,4 +1,33 @@
-const fs = require('fs')
+const Sequalize = require('sequelize');
+
+const sequelize = require('../util/database');
+
+const Product = sequelize.define(
+    'product', {
+    id: {
+        type: Sequalize.INTEGER,
+        autoIncrement: true,
+        allowNull: false,
+        primaryKey: true
+    },
+    title: Sequalize.STRING,
+    price: {
+        type: Sequalize.DOUBLE,
+        allowNull: false
+    },
+    imageUrl: {
+        type: Sequalize.STRING,
+        allowNull: false
+    },
+    description: {
+        type: Sequalize.STRING,
+        allowNull: false
+    }
+});
+
+module.exports = Product;
+
+/* const fs = require('fs')
 const path = require('path')
 const Cart = require('../models/cart')
 const rootDir = require('../util/path')
@@ -82,5 +111,5 @@ module.exports = class Product {
             cb(product);
         });
     } 
-    */
 }
+*/
