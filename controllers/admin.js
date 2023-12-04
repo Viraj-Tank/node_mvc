@@ -15,18 +15,32 @@ exports.postAddProduct = (req, res, next) => {
   const imageUrl = req.body.imageUrl;
   const price = req.body.price;
   const description = req.body.description;
-
-  Product.create({
+  // req.user is sequelize and we setup association inside app.js
+  // so we're getting this magic method (createProduct)
+  req.user.createProduct({
     title: title,
     price: price,
     imageUrl: imageUrl,
-    description: description
+    description: description,
+    userId: req.user.id
   }).then((result) => {
     console.log('Created Product');
     res.redirect('/');
   }).catch((error) => {
     console.log(error);
   });
+  // Product.create({
+  //   title: title,
+  //   price: price,
+  //   imageUrl: imageUrl,
+  //   description: description,
+  //   userId: req.user.id
+  // }).then((result) => {
+  //   console.log('Created Product');
+  //   res.redirect('/');
+  // }).catch((error) => {
+  //   console.log(error);
+  // });
 
   // const product = new Product(title, imageUrl, description, price)
   // product.save()
@@ -42,23 +56,38 @@ exports.getEditProduct = (req, res, next) => {
   //   return res.redirect('/');
   // }
   const prodId = req.params.productId;
-  Product.findAll({
-    where: {
-      id: prodId
-    }
-  }).then(product => {
-    if (!product[0]) {
-      return res.redirect('/');
-    }
-    res.render('admin/edit-product', {
-      pageTitle: 'Edit Product',
-      path: '/admin/edit-product',
-      editing: true,
-      product: product[0]
-    });
-  }).catch(error => {
+  req.user.getProducts({ where: { id: prodId } })
+    .then(products => {
+      if (!products[0]) {
+        return res.redirect('/');
+      }
+      res.render('admin/edit-product', {
+        pageTitle: 'Edit Product',
+        path: '/admin/edit-product',
+        editing: true,
+        product: products[0]
+      });
+    }).catch(error => {
 
-  });
+    });
+
+  // Product.findAll({
+  //   where: {
+  //     id: prodId
+  //   }
+  // }).then(product => {
+  //   if (!product[0]) {
+  //     return res.redirect('/');
+  //   }
+  //   res.render('admin/edit-product', {
+  //     pageTitle: 'Edit Product',
+  //     path: '/admin/edit-product',
+  //     editing: true,
+  //     product: product[0]
+  //   });
+  // }).catch(error => {
+
+  // });
 
   // Product.findById(prodId, product => {
   //   if (!product) {
@@ -121,15 +150,17 @@ exports.postDeleteProduct = (req, res, next) => {
 
 exports.getAdminProducts = (req, res, next) => {
 
-  Product.findAll().then(products => {
-    res.render('admin/products', {
-      prods: products,
-      pageTitle: 'Admin Products',
-      path: '/admin/products'
-    });
-  }).catch(error => {
+  // Product.findAll()
+  req.user.getProducts()
+    .then(products => {
+      res.render('admin/products', {
+        prods: products,
+        pageTitle: 'Admin Products',
+        path: '/admin/products'
+      });
+    }).catch(error => {
 
-  });
+    });
 
   // Product.fetchAll(products => {
   //   res.render('admin/products', {

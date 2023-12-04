@@ -1,8 +1,10 @@
 const Product = require('../models/product')
-const Cart = require('../models/cart')
+const Cart = require('../models/cart');
+const e = require('express');
 
 exports.getProducts = (req, res, next) => {
-  Product.findAll()
+  // Product.findAll()
+  req.user.getProducts()
     .then(products => {
       res.render('shop/product-list', {
         prods: products,
@@ -49,6 +51,26 @@ exports.getIndex = async (req, res, next) => {
 }
 
 exports.getCart = (req, res, next) => {
+  //cannot access like this
+  console.log(req.user.cart);
+  //instead need to call getCart() method
+  req.user
+    .getCart()
+    .then(cart => {
+      return cart.getProducts()
+        .then(products => {
+          res.render('shop/cart', {
+            path: '/cart',
+            pageTitle: 'Your Cart',
+            products: products
+          });
+        }).catch(error => {
+
+        });
+      console.log(cart);
+    })
+    .catch(error => console.log(error));
+
   // Cart.getCart(cart => {
   //   Product.fetchAll(products => {
   //     const cartProducts = [];
@@ -71,10 +93,42 @@ exports.getCart = (req, res, next) => {
 
 exports.postCart = (req, res, next) => {
   const prodId = req.body.productId;
-  Product.findById(prodId, (product) => {
-    Cart.addProduct(prodId, product.price);
-  })
-  res.redirect('/cart');
+  let fetchedCart;
+  // we can the whole cart with getCart()
+  req.user.
+    getCart()
+    .then(cart => {
+      // we store it in other variable to access it in this block
+      fetchedCart = cart;
+      // here we only fetch products which match with our prodId
+      return cart.getProducts({ where: { id: prodId } });
+    })
+    .then(products => {
+      let product;
+      if (products.length > 0) {
+        product = products[0];
+      }
+      let newQuantity = 1;
+      if (product) {
+
+      }
+      return Product.findByPk(prodId)
+        .then(product => {
+          return fetchedCart.addProduct(product, { through: { quantity: newQuantity } });
+        })
+        .catch(err => console.log(err));
+    })
+    .then(() => {
+      res.redirect('/cart');
+    })
+    .catch(error => { console.log(error) });
+
+
+
+  // Product.findById(prodId, (product) => {
+  //   Cart.addProduct(prodId, product.price);
+  // })
+  // res.redirect('/cart');
 }
 
 exports.getCheckout = (req, res, next) => {
